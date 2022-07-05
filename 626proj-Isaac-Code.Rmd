@@ -46,7 +46,6 @@ require(forecast)
 ```{r}
 setwd("~/A&M_Year4/STAT 626/Project-626/R/data")
 load("crime.RData")
-# comment
 ```
 
 # Data Wrangling (Dates) 
@@ -58,9 +57,6 @@ crime = as.data.frame(crime)
 # sample size & number features
 n = dim(crime)[1]
 p = dim(crime)[2]
-
-#TEST TEST TEST
-foo = 1091231238718273
 
 # Nicely formatted dates, extract portions of dates as new columns
 datetime = mdy_hms(crime$Report.Date.Time, tz = "UTC")
