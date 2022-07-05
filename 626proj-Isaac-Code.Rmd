@@ -71,50 +71,50 @@ crime$month_year = as.numeric(paste(as.numeric(year(crime$ymd)), as.numeric(mont
 
 
 ```{r}
-# Subsample crime by individual years (easier computation)
-crime2021 = filter(crime, year == 2021)
-crime2022 = filter(crime, year == 2022)
+# # Subsample crime by individual years (easier computation, for basic implementation)
+# crime2021 = filter(crime, year == 2021)
+# crime2022 = filter(crime, year == 2022)
 
 crimepermonth = crime %>%
   group_by(month_year) %>%
   summarize(Freq=n()) %>%
   filter(row_number()!=1 & row_number()!=n() & row_number()!=n()-1) %>% # get rid of the endpoint days with 0 
-  filter(row_number()>=1 & row_number()<174) # get rid of outlier dip (from 2-2003 to 3-2022)
+  filter(row_number()>=1 & row_number()<174) # (from 2-2003 to 3-2022) got rid of outlier dip 
 
-crimeperday = crime %>% # from (1/1/2003 to 4/1/2022)
-  group_by(date) %>%
-  summarize(Freq=n()) %>%
-  filter(row_number()!=1 & row_number()!=n() & row_number()!=n()-1) # get rid of the endpoint days with 0 
-
-crimeperdaytheft = crime %>%
-  filter(Category.Description=="Theft") %>%
-  group_by(date) %>%
-  summarize(Freq=n()) %>%
-  filter(row_number()!=1 & row_number()!=n() & row_number()!=n()-1)
-
-crimeperyear = crime %>%
-  group_by(year) %>%
-  summarize(Freq=n()) %>%
-  filter(row_number()!=1 & row_number()!=n() & row_number()!=n()-1)
-
-crimeperday2021 = crime2021 %>%
-  group_by(date) %>%
-  summarize(Freq=n()) %>%
-  filter(row_number()!=1 & row_number()!=n() & row_number()!=n()-1)
+# crimeperday = crime %>% # from (1/1/2003 to 4/1/2022)
+#   group_by(date) %>%
+#   summarize(Freq=n()) %>%
+#   filter(row_number()!=1 & row_number()!=n() & row_number()!=n()-1) # get rid of the endpoint days with 0 
+# 
+# crimeperdaytheft = crime %>%
+#   filter(Category.Description=="Theft") %>%
+#   group_by(date) %>%
+#   summarize(Freq=n()) %>%
+#   filter(row_number()!=1 & row_number()!=n() & row_number()!=n()-1)
+# 
+# crimeperyear = crime %>%
+#   group_by(year) %>%
+#   summarize(Freq=n()) %>%
+#   filter(row_number()!=1 & row_number()!=n() & row_number()!=n()-1)
+# 
+# crimeperday2021 = crime2021 %>%
+#   group_by(date) %>%
+#   summarize(Freq=n()) %>%
+#   filter(row_number()!=1 & row_number()!=n() & row_number()!=n()-1)
 
 ############################
 # Crime count per **** 
 x = ts(crimepermonth)  # CHANGE
 ############################
 
-ma = stats::filter(x[,2], sides = 2, filter = rep(1/12,12))
+#ma = stats::filter(x[,2], sides = 2, filter = rep(1/12,12))
 
-tsplot(x[,2], main="Police Reports in Austin", col=4, 
+tsplot(x[,2], main="Monthly Police Reports in Austin", col=4, 
        ylab = "Number of Police Reports", 
-       xlab = "Number of units since January 1, 2003")
-lines(ma, type="l", lty=2, col = "red")
-legend(5000, 525, legend=c("Data", "Moving Average"),
-       col=c("blue", "red"), lty=1:1, cex=0.8)
+       xlab = "Time (number of months since February 2003)")
+#lines(ma, type="l", lty=2, col = "red")
+#legend(5000, 525, legend=c("Data", "Moving Average"),
+#       col=c("blue", "red"), lty=1:1, cex=0.8)
 
 ```
 
@@ -124,71 +124,96 @@ legend(5000, 525, legend=c("Data", "Moving Average"),
 crimemonth = crime %>%
   group_by(month) %>%
   summarize(Freq=n()) %>%
-  filter(row_number()!=1 & row_number()!=n() & row_number()!=n()-1) # get rid of the endpoint days with 0 
+  filter(row_number()!=n()) # get rid of the endpoint days with 0 
 
-plot(crimemonth$month, crimemonth$Freq, 
-     main = "Plot of Crime Count vs Month", 
-     xlab = "Month",
-     ylab = "Total Crime Count")
+crimemonth$month = c("Jan", "Feb", "Mar", "Apr", "May", "Jun", "Jul", "Aug", "Sep", "Oct", "Nov", "Dec")
+crimemonth$month <- factor(crimemonth$month, levels = crimemonth$month)
+crimemonth = as.data.frame(crimemonth)
+
+ggplot(crimemonth, aes(x=month, y=Freq)) + geom_line(aes(group=1)) + geom_point(color="blue") +
+    labs(title="Total Monthly Police Reports in Austin", 
+         y = "Total Crime Count",
+         x= "Month") +
+    theme(plot.title=element_text(hjust=0.5))
 ```
 
 
 # Kernel Smoother to Estimate Trend
 ```{r}
 tsplot(x[,2], col="blue",
-       main = "Daily Crime Reports in Austin (Kernel Bandwidth=12)", ylab = "Total Number of Polics Reports")  
-lines(ksmooth(time(x[,2]), x[,2], "normal", bandwidth=12), lwd=2, col="red")  
+       main = "Monthly Crime Reports in Austin (Kernel Bandwidth=5)", ylab = "Number of Police Reports", 
+       xlab = "Time (number of months since February 2003)")  
+lines(ksmooth(time(x[,2]), x[,2], "normal", bandwidth=5), lwd=2, col="red")  
+legend(105, 13000, legend=c("Original Data", "Normal Kernel Smoother (B=5)"),
+       col=c("blue", "red"), lty=1:1, cex=0.8)
 
 tsplot(x[,2], col="blue",
-       main = "Daily Crime Reports in Austin (Kernel Bandwidth=30)", ylab = "Total Number of Polics Reports")  
+       main = "Monthly Crime Reports in Austin (Kernel Bandwidth=30)", ylab = "Number of Police Reports", 
+       xlab="Time (number of months since February 2003)")  
 lines(ksmooth(time(x[,2]), x[,2], "normal", bandwidth=30), lwd=2, col="red")  
+legend(105, 13000, legend=c("Original Data", "Normal Kernel Smoother (B=30)"),
+       col=c("blue", "red"), lty=1:1, cex=0.8)
 
 ```
 
 
-# Transform to Stationarity 
+# Check Stationarity 
+## mean and variance stationarity check 
 ```{r}
 # Check for equal variance
 n = length(x[,2])
-cat("sample variance first half of TS:", sd(x[,2][1:n/2])^2, "\n")
-cat("sample variance second half of TS:", sd(x[,2][((n/2)+1):n])^2)
+var1 = sd(x[,2][1:n/2])^2
+var2 = sd(x[,2][((n/2)+1):n])^2
+cat("sample variance first half of TS:", var1, "\n")
+cat("sample variance second half of TS:", var2, "\n")
+cat("ratio of var in 1st to 2nd half:" ,var1/var2*100, "%\n")
 
 # check normality
-qqnorm(x[,2], main="", col=4)
+qqnorm(x[,2], main="Normal QQPlot - Original Data", col=4)
 qqline(x[,2], col=2, lwd=2)  
 
 # Check ACF for trend
 max.lag=165 # 7000, 220
-acf1(x[,2], main = "ACF for Original TS", max.lag=max.lag)
-acf1(x[,2], main = "PACF for Original TS", max.lag=max.lag, pacf=TRUE)
+acf1(x[,2], main = "Sample ACF - Original TS", max.lag=max.lag)
+acf1(x[,2], main = "Sample PACF - Original TS", max.lag=max.lag, pacf=TRUE)
 ```
 
 
-
+# Transform to Stationary
 # First Order Difference 
 ```{r}
 x_diff = diff(x[,2])
-tsplot(x_diff, main="", ylab="", col=4, margin=0)  
-mtext("First Order Difference", side=3, line=.5, cex=1.2, font=2, adj=0) 
+tsplot(x_diff, col=4,
+       main = "Monthly Police Reports in Austin (First Order Difference)", 
+       ylab = "Number of Police Reports (1st Order Difference)",
+       xlab = "Time (number of months since February 2003)")
 
 # Check for equal variance
 n = length(x_diff)
-cat("sample variance first half of TS:", sd(x_diff[1:n/2])^2, "\n")
-cat("sample variance second half of TS:", sd(x_diff[((n/2)+1):n])^2)
+var1_diff = sd(x_diff[1:n/2])^2
+var2_diff = sd(x_diff[((n/2)+1):n])^2
+cat("sample variance first half of TS:",var1_diff , "\n")
+cat("sample variance second half of TS:", var2_diff, "\n")
+cat("ratio of var in 1st to 2nd half:" ,var1_diff/var2_diff*100, "%\n")
 
 # check normality
-qqnorm(x_diff, main="", col=4)
+qqnorm(x_diff, main="Normal QQPlot for Differenced Data", col=4)
 qqline(x_diff, col=2, lwd=2)  
 
 max.lag=165 #7000, 220
-acf1(x_diff, main = expression("Sample ACF Differenced"), max.lag=max.lag)
-acf1(x_diff, main = expression("Sample PACF - Differenced"), max.lag=max.lag, pacf=TRUE)
+acf1(x_diff, main = expression("Sample ACF - Differenced Data"), max.lag=max.lag)
+acf1(x_diff, main = expression("Sample PACF - Differenced Data"), max.lag=max.lag, pacf=TRUE)
 ```
 
+# Check for Cyclic Pattern in Differenced Data
 ```{r}
 tsplot(x_diff, col="blue",
-       main = "Daily Crime Reports in Austin (Kernel Bandwidth=3)", ylab = "Total Number of Polics Reports")  
-lines(ksmooth(time(x_diff), x_diff, "normal", bandwidth=3), lwd=2, col="red")  
+       main = "Differenced Monthly Crime Reports in Austin (Kernel Bandwidth=5)", 
+       ylab = "Number of Police Reports (1st Order Difference)", 
+       xlab = "Time (number of months since February 2003)")  
+lines(ksmooth(time(x_diff), x_diff, "normal", bandwidth=5), lwd=2, col="red")  
+legend(90, 2300, legend=c("Original Data", "Normal Kernel Smoother (B=5)"),
+       col=c("blue", "red"), lty=1:1, cex=0.8)
 ```
 
 # ARMA Model Estimation
@@ -198,19 +223,19 @@ The ACF and PACF plots should be considered together to define the process. For 
 
 ```{r}
 q=8 # AR order
-d=0 # degree of differencing
+d=0 # degree of differencing (0 for AMRA models - we already took car of differncing)
 p=0 # MA order
 arma_fit = arima(x_diff, order=c(q,d,p))
 summary(arma_fit)
-plot(arma_fit$residuals, main = "ARMA Residuals", ylab = "Residuals")
+plot(arma_fit$residuals, main = "ARMA(8,0) Model Residuals", ylab = "Residuals")
 checkresiduals(arma_fit)
 ```
 
 
-# Forecast
+# Forecast for the next 12 months 
 ```{r}
-autoplot(forecast(arma_fit, level=95), ylab="Monthly Police Reports in Austin",
-         xlab = "Time (months)")
+autoplot(forecast(arma_fit, level=95, h=12), ylab="Differenced Monthly Police Reports in Austin",
+         xlab = "Time (number of months since February 2003)")
 ```
 
 
