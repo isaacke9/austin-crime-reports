@@ -58,6 +58,9 @@ crime = as.data.frame(crime)
 n = dim(crime)[1]
 p = dim(crime)[2]
 
+#TEST TEST TEST
+foo = 1091231238718273
+
 # Nicely formatted dates, extract portions of dates as new columns
 datetime = mdy_hms(crime$Report.Date.Time, tz = "UTC")
 crime$ymd = datetime
