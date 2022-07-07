@@ -33,9 +33,9 @@ library(lubridate)
 library(ggplot2)
 library(dplyr)
 library(data.table)
-library(ggrepel)
-library(tidyverse)
-library(RColorBrewer)
+#library(ggrepel)
+#library(tidyverse)
+#library(RColorBrewer)
 library(astsa)
 require(forecast)
 # library(qmap)
@@ -232,6 +232,15 @@ checkresiduals(arma_fit)
 ```
 
 
+## Check roots for parameter redundancy
+```{r}
+(roots = polyroot(c(1,head(-unname(arma_fit$coef), -1))))
+Mod(roots)
+#base::duplicated(Mod(roots))
+```
+
+
+
 # Forecast for the next 12 months 
 ```{r}
 autoplot(forecast(arma_fit, level=95, h=12), ylab="Differenced Monthly Police Reports in Austin",
@@ -240,3 +249,28 @@ autoplot(forecast(arma_fit, level=95, h=12), ylab="Differenced Monthly Police Re
 
 
 
+
+##########################################################################
+
+
+## Fit AR(p) with yule-walker estimation (page 83)
+```{r}
+(ar_yw = ar.yw(x_diff, order = 2))
+ar_yw$x.mean # mean estimate
+sqrt(diag(ar_yw$asy.var.coef)) # coef standard errors
+plot(ar_yw$resid, main = "AR(8) Model Residuals", ylab = "Residuals")
+checkresiduals(ar_yw)
+```
+
+## Check roots for parameter redundancy
+```{r}
+(roots2 = polyroot(c(1,-unname(ar_yw$ar))))
+Mod(roots2)
+#base::duplicated(Mod(roots2))
+```
+
+## Forecast
+```{r}
+autoplot(forecast(ar_yw, level=95, h=12), ylab="Differenced Monthly Police Reports in Austin",
+         xlab = "Time (number of months since February 2003)", xlim=c(100,185))
+```
