@@ -159,7 +159,7 @@ legend(105, 13000, legend=c("Original Data", "Normal Kernel Smoother (B=30)"),
 
 # Check Stationarity 
 ## mean and variance stationarity check 
-```{r}
+```{r, results='hide}
 # Check for equal variance
 n = length(x[,2])
 var1 = sd(x[,2][1:n/2])^2
@@ -216,7 +216,7 @@ legend(90, 2300, legend=c("Original Data", "Normal Kernel Smoother (B=5)"),
        col=c("blue", "red"), lty=1:1, cex=0.8)
 ```
 
-# ARMA Model Estimation
+# AR Model Estimation
 > choosing q and p in ARMA: https://towardsdatascience.com/identifying-ar-and-ma-terms-using-acf-and-pacf-plots-in-time-series-forecasting-ccb9fd073db8
 
 The ACF and PACF plots should be considered together to define the process. For the AR process, we expect that the ACF plot will gradually decrease and simultaneously the PACF should have a sharp drop after p significant lags. To define a MA process, we expect the opposite from the ACF and PACF plots, meaning that: the ACF should show a sharp drop after a certain q number of lags while PACF should show a geometric or gradual decreasing trend. On the other hand, if both ACF and PACF plots demonstrate a gradual decreasing pattern, then the ARMA process should be considered for modeling.
@@ -227,7 +227,7 @@ d=0 # degree of differencing (0 for AMRA models - we already took car of differn
 p=0 # MA order
 arma_fit = arima(x_diff, order=c(q,d,p))
 summary(arma_fit)
-plot(arma_fit$residuals, main = "ARMA(8,0) Model Residuals", ylab = "Residuals")
+plot(arma_fit$residuals, main = "AR(8) Model Residuals", ylab = "Residuals")
 checkresiduals(arma_fit)
 ```
 
@@ -244,7 +244,8 @@ Mod(roots)
 # Forecast for the next 12 months 
 ```{r}
 autoplot(forecast(arma_fit, level=95, h=12), ylab="Differenced Monthly Police Reports in Austin",
-         xlab = "Time (number of months since February 2003)")
+         xlab = "Time (number of months since February 2003)",
+         main = "12 Month Forecast from AR(8) Model")
 ```
 
 
@@ -255,12 +256,14 @@ autoplot(forecast(arma_fit, level=95, h=12), ylab="Differenced Monthly Police Re
 
 ## Fit AR(p) with yule-walker estimation (page 83)
 ```{r}
-(ar_yw = ar.yw(x_diff, order = 2))
+(ar_yw = ar.yw(x_diff, order = 8))
 ar_yw$x.mean # mean estimate
 sqrt(diag(ar_yw$asy.var.coef)) # coef standard errors
-plot(ar_yw$resid, main = "AR(8) Model Residuals", ylab = "Residuals")
+plot(ar_yw$resid, main = "AR(3) Model Residuals", ylab = "Residuals")
 checkresiduals(ar_yw)
 ```
+
+
 
 ## Check roots for parameter redundancy
 ```{r}
@@ -272,5 +275,6 @@ Mod(roots2)
 ## Forecast
 ```{r}
 autoplot(forecast(ar_yw, level=95, h=12), ylab="Differenced Monthly Police Reports in Austin",
-         xlab = "Time (number of months since February 2003)", xlim=c(100,185))
+         xlab = "Time (number of months since February 2003)", 
+         main = "Forecasts from AR(8) (Yule-Walker)")
 ```
