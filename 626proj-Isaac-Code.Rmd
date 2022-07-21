@@ -278,3 +278,21 @@ autoplot(forecast(ar_yw, level=95, h=12), ylab="Differenced Monthly Police Repor
          xlab = "Time (number of months since February 2003)", 
          main = "Forecasts from AR(8) (Yule-Walker)")
 ```
+
+
+## SARIMA(P,D,Q)x(p,d,q)
+```{r}
+acf2(x_diff, max.lag=50)
+```
+
+```{r}
+sarima(x[,2], p=2,d=1,q=0, P=2,D=1,Q=0,S=9) 
+```
+
+
+
+
+```{r}
+sarima.for(x[,2], n.ahead=24, p=2,d=1,q=0, P=2,D=1,Q=0,S=9)
+
+```
