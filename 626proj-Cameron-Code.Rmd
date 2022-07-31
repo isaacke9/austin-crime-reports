@@ -34,7 +34,7 @@ library(ggplot2)
 library(dplyr)
 library(data.table)
 library(ggrepel)
-library(tidyverse)
+#library(tidyverse)
 library(RColorBrewer)
 library(astsa)
 require(forecast)
@@ -44,7 +44,7 @@ require(forecast)
 
 # Load Cleaned Dataset
 ```{r}
-setwd("~/A&M_Year4/STAT 626/Project-626/R/data")
+setwd("C:/Users/F.R.I.D.A.Y/Desktop/STAT626/Project")
 load("crime.RData")
 # comment
 ```
@@ -69,8 +69,7 @@ crime$year = year(crime$ymd)
 crime$month = month(crime$ymd)
 crime$datetime = datetime
 crime$date = as.Date(crime$datetime)
-crime$month_year = as.numeric(paste(as.numeric(year(crime$ymd)), as.numeric(month(crime$ymd)), sep=""))
-
+crime$month_year = as.character(paste(as.numeric(year(crime$ymd)), as.numeric(month(crime$ymd)), as.numeric("1") ,sep="-"))
 ```
 
 
@@ -82,8 +81,10 @@ crime2022 = filter(crime, year == 2022)
 crimepermonth = crime %>%
   group_by(month_year) %>%
   summarize(Freq=n()) %>%
-  filter(row_number()!=1 & row_number()!=n() & row_number()!=n()-1) %>% # get rid of the endpoint days with 0 
-  filter(row_number()>=1 & row_number()<174) # get rid of outlier dip (from 2-2003 to 3-2022)
+  filter(row_number()!=1 & row_number()!=n() & row_number()!=n()-1) #%>% # get rid of the endpoint days with 0 
+  #filter(row_number()>=1 & row_number()<174) # get rid of outlier dip (from 2-2003 to 3-2022)
+crimepermonth$month_year = as.Date(crimepermonth$month_year)
+crimepermonth = arrange(crimepermonth,month_year)
 
 crimeperday = crime %>% # from (1/1/2003 to 4/1/2022)
   group_by(date) %>%
@@ -145,8 +146,7 @@ lines(ksmooth(time(x[,2]), x[,2], "normal", bandwidth=12), lwd=2, col="red")
 
 tsplot(x[,2], col="blue",
        main = "Daily Crime Reports in Austin (Kernel Bandwidth=30)", ylab = "Total Number of Polics Reports")  
-lines(ksmooth(time(x[,2]), x[,2], "normal", bandwidth=30), lwd=2, col="red")  
-
+lines(ksmooth(time(x[,2]), x[,2], "normal", bandwidth=30), lwd=2, col="red")
 ```
 
 
@@ -187,6 +187,7 @@ qqline(x_diff, col=2, lwd=2)
 max.lag=165 #7000, 220
 acf1(x_diff, main = expression("Sample ACF Differenced"), max.lag=max.lag)
 acf1(x_diff, main = expression("Sample PACF - Differenced"), max.lag=max.lag, pacf=TRUE)
+
 ```
 
 ```{r}
@@ -195,19 +196,27 @@ tsplot(x_diff, col="blue",
 lines(ksmooth(time(x_diff), x_diff, "normal", bandwidth=3), lwd=2, col="red")  
 ```
 
-# ARMA Model Estimation
+# SARIMA Model Estimation
 > choosing q and p in ARMA: https://towardsdatascience.com/identifying-ar-and-ma-terms-using-acf-and-pacf-plots-in-time-series-forecasting-ccb9fd073db8
 
 The ACF and PACF plots should be considered together to define the process. For the AR process, we expect that the ACF plot will gradually decrease and simultaneously the PACF should have a sharp drop after p significant lags. To define a MA process, we expect the opposite from the ACF and PACF plots, meaning that: the ACF should show a sharp drop after a certain q number of lags while PACF should show a geometric or gradual decreasing trend. On the other hand, if both ACF and PACF plots demonstrate a gradual decreasing pattern, then the ARMA process should be considered for modeling.
 
 ```{r}
-q=8 # AR order
+p=8 # AR order
 d=0 # degree of differencing
-p=0 # MA order
-arma_fit = arima(x_diff, order=c(q,d,p))
+q=0 # MA order
+arma_fit = arima(x_diff, order=c(p,d,q))
 summary(arma_fit)
 plot(arma_fit$residuals, main = "ARMA Residuals", ylab = "Residuals")
 checkresiduals(arma_fit)
+```
+
+```{r sarima}
+tsplot(diff(diff(x[,2],12)), ylab="series: diff(diff(x[,2],12))", col=4)
+acf2(diff(diff(x[,2],12)), main="series: diff(diff(x[,2],12))",max.lag = 165)
+#p=1,d=1,q=1?,P=1,D=1,Q=,S=12
+fit.seasonal = sarima(x[,2],p=1,d=1,q=1,P=1,D=1,Q=0,S=12)
+fit.seasonal
 ```
 
 
@@ -215,6 +224,7 @@ checkresiduals(arma_fit)
 ```{r}
 autoplot(forecast(arma_fit, level=95), ylab="Monthly Police Reports in Austin",
          xlab = "Time (months)")
+sarima.for(x[,2],n.ahead = 12,1,1,1,1,1,0,12)
 ```
 
 
