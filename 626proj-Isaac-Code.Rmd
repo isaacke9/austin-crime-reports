@@ -224,7 +224,7 @@ legend(110, 2300, legend=c("Original Data", "Normal Kernel Smoother (B=5)"),
 *********************************************
 *********************************************
 
-# AR Model Estimation
+# [ Model 1 ] AR Model Estimation
 > choosing q and p in ARMA: https://towardsdatascience.com/identifying-ar-and-ma-terms-using-acf-and-pacf-plots-in-time-series-forecasting-ccb9fd073db8
 
 The ACF and PACF plots should be considered together to define the process. For the AR process, we expect that the ACF plot will gradually decrease and simultaneously the PACF should have a sharp drop after p significant lags. To define a MA process, we expect the opposite from the ACF and PACF plots, meaning that: the ACF should show a sharp drop after a certain q number of lags while PACF should show a geometric or gradual decreasing trend. On the other hand, if both ACF and PACF plots demonstrate a gradual decreasing pattern, then the ARMA process should be considered for modeling.
@@ -256,8 +256,11 @@ autoplot(forecast(arma_fit, level=95, h=12), ylab="Differenced Monthly Police Re
          main = "12 Month Forecast from AR(8) Model")
 ```
 
+# Fit AR(8) model and get AIC and BIC
 
-
+```{r}
+sarima(x[,2], p=8,d=1,q=0, P=0,D=0,Q=0) 
+```
 
 ##########################################################################
 
@@ -294,17 +297,27 @@ autoplot(forecast(ar_yw, level=95, h=12), ylab="Differenced Monthly Police Repor
 ***************************************************************
 ***************************************************************
 
-## SARIMA(p,d,q)x(P,D,Q)
+## [ Model 2] SARIMA(p,d,q)x(P,D,Q)
+###  Seasonal ACF and PACF
 ```{r}
-acf2(x_diff, max.lag=100)
+x_seasonal = diff(x_diff, 12)
+acf2(x_seasonal, max.lag=75)
+```
+
+## Plot Seasonally Differenced TS
+```{r}
+tsplot(x_seasonal, col=4,
+       main = "Monthly Police Reports in Austin (S=12 Seasonal Difference)", 
+       ylab = "Number of Police Reports (Seasonal Difference)",
+       xlab = "Time (number of months since January 2003)")
 ```
 
 # Initial Fit (based on ACF and PACF plots)
 ```{r}
-sarima(x[,2], p=1,d=1,q=1, P=1,D=1,Q=0,S=12) 
+sarima(x[,2], p=0,d=1,q=0, P=0,D=1,Q=1,S=12) 
 ```
 
-# Model experimenting
+# Model experimenting (change parameters)
 ```{r}
 sarima(x[,2], p=2,d=1,q=1, P=2,D=1,Q=1,S=12) 
 ```
@@ -315,7 +328,7 @@ sarima(x[,2], p=2,d=1,q=1, P=2,D=1,Q=1,S=12)
 sarima(x[,2], p=1,d=1,q=1, P=0,D=1,Q=1,S=12) # P=1 yields AIC=14.73 and BIC=14.807
 ```
 
-## Causality & Invertibility - it appears to be both 
+## Causality & Invertibility (?) - it appears to be both 
 ```{r}
 round(ARMAtoMA(ar=0.3345, ma=-0.7169, 25), 2)
 round(ARMAtoAR(ar=0.3345, ma=-0.7169, 25), 2)
@@ -335,9 +348,14 @@ Mod(polyroot(MA))
 sarima.for(x[,2], n.ahead=24, p=1,d=1,q=1, P=0,D=1,Q=1,S=12, 
            main = "24-Month Forecast", xlab = "Time (number of months since January 2003)")
 ```
+## SARIMA Forecast values and SE
+```{r}
+sarima_for = sarima.for(x[,2], n.ahead=24, p=1,d=1,q=1, P=0,D=1,Q=1,S=12, 
+           main = "24-Month Forecast", xlab = "Time (number of months since January 2003)")
+sarima_for
+```
 
-
-# FB Prophet Model
+# [ Model 3 ] FB Prophet Model
 ```{r}
 ds = seq(as.Date("2003/01/01"), by = "month", length.out = 231)
 crime_df = data.frame(ds = ds, y=x[,2])
