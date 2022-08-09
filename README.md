@@ -19,8 +19,8 @@ since January 1, 2003 and at the time of writing was last updated June 6, 2022. 
 project, we specifically look at the count of the monthly police reports from January 2003 to March 2022 (231
 observations).  
 
-Dataset (crime.RData) located on [Google Drive](https://drive.google.com/file/d/1w2W3jyYdG7crC4fsx9W78Wb7SkXqRjjC/view?usp=sharing)
+Dataset (crime.RData): [Google Drive](https://drive.google.com/file/d/1w2W3jyYdG7crC4fsx9W78Wb7SkXqRjjC/view?usp=sharing)
 
 Final Presentation Slide Deck: [here](https://docs.google.com/presentation/d/193Je0lj2YXZ-jlU9PsKeZLogCFzr1E4-PtFTFds4Os4/edit?usp=sharing)
 
-Final Report: [Google Drive](https://drive.google.com/file/d/1PRfy2dit0GAtUfYdIPPhjarPmeWc7UfD/view?usp=sharing) and [Final Report folder](https://github.com/isaacke9/austin-crime-reports/tree/main/Final%20Report)
+Final Report: [Google Drive](https://drive.google.com/file/d/1PRfy2dit0GAtUfYdIPPhjarPmeWc7UfD/view?usp=sharing) or [Final Report folder](https://github.com/isaacke9/austin-crime-reports/tree/main/Final%20Report)
